@@ -1,0 +1,274 @@
+<?php
+/**
+ * Plugin settings screen, built on the WordPress Settings API.
+ *
+ * Using the Settings API (rather than hand-rolling a form and reading
+ * $_POST directly) gets nonce verification, capability checks on the
+ * options.php submission handler, and a sanitize callback for free —
+ * all the pieces WordPress.org review looks for on a settings screen.
+ *
+ * @package Webcasata_Visual_Product_Builder
+ */
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/**
+ * Class WVPB_Settings.
+ */
+class WVPB_Settings {
+
+	const SETTINGS_GROUP = 'wvpb_settings_group';
+	const SETTINGS_PAGE  = 'wvpb-settings';
+
+	/**
+	 * Hooks registration into WordPress.
+	 *
+	 * @return void
+	 */
+	public static function init() {
+		add_action( 'admin_init', array( __CLASS__, 'register_settings' ) );
+	}
+
+	/**
+	 * Registers the setting, its section, and its one field.
+	 *
+	 * @return void
+	 */
+	public static function register_settings() {
+
+		register_setting(
+			self::SETTINGS_GROUP,
+			WVPB_OPTION_SETTINGS,
+			array(
+				'type'              => 'array',
+				'sanitize_callback' => array( __CLASS__, 'sanitize' ),
+				'default'           => array(
+					'delete_data_on_uninstall' => false,
+					'button_position'          => 'before_cart',
+					'show_on_archive'          => false,
+					'show_sticky_bar'          => false,
+				),
+			)
+		);
+
+		add_settings_section(
+			'wvpb_data_section',
+			__( 'Data', 'webcasata-visual-product-builder' ),
+			array( __CLASS__, 'render_data_section_intro' ),
+			self::SETTINGS_PAGE
+		);
+
+		add_settings_field(
+			'wvpb_delete_data_on_uninstall',
+			__( 'On uninstall', 'webcasata-visual-product-builder' ),
+			array( __CLASS__, 'render_delete_data_field' ),
+			self::SETTINGS_PAGE,
+			'wvpb_data_section'
+		);
+
+		add_settings_section(
+			'wvpb_display_section',
+			__( 'Frontend Display', 'webcasata-visual-product-builder' ),
+			array( __CLASS__, 'render_display_section_intro' ),
+			self::SETTINGS_PAGE
+		);
+
+		add_settings_field(
+			'wvpb_button_position',
+			__( 'Customize button position', 'webcasata-visual-product-builder' ),
+			array( __CLASS__, 'render_button_position_field' ),
+			self::SETTINGS_PAGE,
+			'wvpb_display_section'
+		);
+
+		add_settings_field(
+			'wvpb_show_on_archive',
+			__( 'Shop / category pages', 'webcasata-visual-product-builder' ),
+			array( __CLASS__, 'render_show_on_archive_field' ),
+			self::SETTINGS_PAGE,
+			'wvpb_display_section'
+		);
+
+		add_settings_field(
+			'wvpb_show_sticky_bar',
+			__( 'Sticky bar', 'webcasata-visual-product-builder' ),
+			array( __CLASS__, 'render_sticky_bar_field' ),
+			self::SETTINGS_PAGE,
+			'wvpb_display_section'
+		);
+	}
+
+	/**
+	 * The button-position values the settings screen (and the frontend
+	 * hook wiring in WVPB_Frontend) both recognize.
+	 *
+	 * @return string[]
+	 */
+	public static function get_allowed_button_positions() {
+		return array( 'before_cart', 'after_cart', 'before_summary', 'after_summary' );
+	}
+
+	/**
+	 * Sanitizes the settings array before WordPress saves it.
+	 *
+	 * Every key is explicitly whitelisted and cast to its expected
+	 * type — nothing arriving from the form is trusted or stored as-is,
+	 * and unrecognized keys are simply dropped.
+	 *
+	 * @param mixed $input Raw value submitted from the settings form.
+	 * @return array Sanitized settings, merged over any existing values.
+	 */
+	public static function sanitize( $input ) {
+
+		$existing = get_option( WVPB_OPTION_SETTINGS, array() );
+		$input    = is_array( $input ) ? $input : array();
+
+		$position = isset( $input['button_position'] ) ? sanitize_key( $input['button_position'] ) : 'before_cart';
+		if ( ! in_array( $position, self::get_allowed_button_positions(), true ) ) {
+			$position = 'before_cart';
+		}
+
+		$sanitized = array(
+			'delete_data_on_uninstall' => ! empty( $input['delete_data_on_uninstall'] ),
+			'button_position'          => $position,
+			'show_on_archive'          => ! empty( $input['show_on_archive'] ),
+			'show_sticky_bar'          => ! empty( $input['show_sticky_bar'] ),
+		);
+
+		return wp_parse_args( $sanitized, is_array( $existing ) ? $existing : array() );
+	}
+
+	/**
+	 * Prints the intro text for the Data section.
+	 *
+	 * @return void
+	 */
+	public static function render_data_section_intro() {
+		echo '<p>' . esc_html__( 'Your customizers, uploaded layer images, and settings are always kept if you simply deactivate this plugin.', 'webcasata-visual-product-builder' ) . '</p>';
+	}
+
+	/**
+	 * Renders the "delete data on uninstall" checkbox field.
+	 *
+	 * @return void
+	 */
+	public static function render_delete_data_field() {
+
+		$settings = get_option( WVPB_OPTION_SETTINGS, array() );
+		$checked  = ! empty( $settings['delete_data_on_uninstall'] );
+		?>
+		<label for="wvpb_delete_data_on_uninstall">
+			<input
+				type="checkbox"
+				id="wvpb_delete_data_on_uninstall"
+				name="<?php echo esc_attr( WVPB_OPTION_SETTINGS ); ?>[delete_data_on_uninstall]"
+				value="1"
+				<?php checked( $checked ); ?>
+			/>
+			<?php esc_html_e( 'Permanently delete all customizers, layer images, and settings when this plugin is deleted from the Plugins screen.', 'webcasata-visual-product-builder' ); ?>
+		</label>
+		<p class="description">
+			<?php esc_html_e( 'Leave this unchecked (the default) if you might reinstall the plugin later and want your work to still be there.', 'webcasata-visual-product-builder' ); ?>
+		</p>
+		<?php
+	}
+
+	/**
+	 * Prints the intro text for the Frontend Display section.
+	 *
+	 * @return void
+	 */
+	public static function render_display_section_intro() {
+		echo '<p>' . esc_html__( 'Control where the Customize button appears on the storefront.', 'webcasata-visual-product-builder' ) . '</p>';
+	}
+
+	/**
+	 * Renders the button-position dropdown.
+	 *
+	 * @return void
+	 */
+	public static function render_button_position_field() {
+
+		$settings = get_option( WVPB_OPTION_SETTINGS, array() );
+		$current  = isset( $settings['button_position'] ) ? $settings['button_position'] : 'before_cart';
+
+		$labels = array(
+			'before_cart'    => __( 'Before the Add to Cart button (default)', 'webcasata-visual-product-builder' ),
+			'after_cart'     => __( 'After the Add to Cart button', 'webcasata-visual-product-builder' ),
+			'before_summary' => __( 'Above the product title', 'webcasata-visual-product-builder' ),
+			'after_summary'  => __( 'Below the short description', 'webcasata-visual-product-builder' ),
+		);
+		?>
+		<select name="<?php echo esc_attr( WVPB_OPTION_SETTINGS ); ?>[button_position]">
+			<?php foreach ( self::get_allowed_button_positions() as $value ) : ?>
+				<option value="<?php echo esc_attr( $value ); ?>" <?php selected( $current, $value ); ?>>
+					<?php echo esc_html( $labels[ $value ] ); ?>
+				</option>
+			<?php endforeach; ?>
+		</select>
+		<?php
+	}
+
+	/**
+	 * Renders the "show on archive pages" checkbox.
+	 *
+	 * @return void
+	 */
+	public static function render_show_on_archive_field() {
+
+		$settings = get_option( WVPB_OPTION_SETTINGS, array() );
+		$checked  = ! empty( $settings['show_on_archive'] );
+		?>
+		<label>
+			<input type="checkbox" name="<?php echo esc_attr( WVPB_OPTION_SETTINGS ); ?>[show_on_archive]" value="1" <?php checked( $checked ); ?> />
+			<?php esc_html_e( 'Also show a Customize button on shop and category product listings.', 'webcasata-visual-product-builder' ); ?>
+		</label>
+		<p class="description">
+			<?php esc_html_e( 'Clicking it takes the customer to the product page with the customizer already open.', 'webcasata-visual-product-builder' ); ?>
+		</p>
+		<?php
+	}
+
+	/**
+	 * Renders the "sticky bar" checkbox.
+	 *
+	 * @return void
+	 */
+	public static function render_sticky_bar_field() {
+
+		$settings = get_option( WVPB_OPTION_SETTINGS, array() );
+		$checked  = ! empty( $settings['show_sticky_bar'] );
+		?>
+		<label>
+			<input type="checkbox" name="<?php echo esc_attr( WVPB_OPTION_SETTINGS ); ?>[show_sticky_bar]" value="1" <?php checked( $checked ); ?> />
+			<?php esc_html_e( 'Show a sticky bar with the product name, price, and a Customize button once the customer scrolls past it.', 'webcasata-visual-product-builder' ); ?>
+		</label>
+		<?php
+	}
+
+	/**
+	 * Renders the settings page shell.
+	 *
+	 * @return void
+	 */
+	public static function render_page() {
+
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			return;
+		}
+		?>
+		<div class="wrap">
+			<h1><?php esc_html_e( 'Webcasata Visual Product Builder — Settings', 'webcasata-visual-product-builder' ); ?></h1>
+			<form action="options.php" method="post">
+				<?php
+				settings_fields( self::SETTINGS_GROUP ); // Outputs the nonce + option group fields.
+				do_settings_sections( self::SETTINGS_PAGE );
+				submit_button();
+				?>
+			</form>
+		</div>
+		<?php
+	}
+}

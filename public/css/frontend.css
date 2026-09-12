@@ -1,0 +1,343 @@
+/**
+ * Webcasata Visual Product Builder — frontend modal.
+ *
+ * This is embedded inside an arbitrary WooCommerce theme, not a
+ * standalone branded page, so it inherits the page's font rather than
+ * importing one, and keeps its own palette to a light touch: a warm,
+ * food-appropriate accent for "selected" states (this is a cake/pizza
+ * customizer, not a SaaS dashboard) layered over otherwise neutral,
+ * adaptable chrome.
+ */
+
+#wvpb-modal-overlay,
+#wvpb-modal-overlay * {
+	box-sizing: border-box;
+}
+
+.wvpb-customize-button {
+	margin-inline-start: 8px;
+}
+
+/* ---------------------------------------------------------------
+ * Overlay + modal shell
+ * ------------------------------------------------------------- */
+
+.wvpb-modal-overlay {
+	position: fixed;
+	inset: 0;
+	background: rgba(24, 20, 16, 0.55);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 24px;
+	z-index: 100000;
+}
+
+.wvpb-modal-overlay[hidden] {
+	display: none;
+}
+
+body.wvpb-modal-open {
+	overflow: hidden;
+}
+
+.wvpb-modal {
+	background: #fff;
+	color: #2b2620;
+	width: 100%;
+	max-width: 900px;
+	max-height: calc(100vh - 48px);
+	border-radius: 10px;
+	box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+.wvpb-modal-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 18px 24px;
+	border-bottom: 1px solid #ece5d8;
+}
+
+.wvpb-modal-header h2 {
+	margin: 0;
+	font-size: 19px;
+	font-weight: 600;
+}
+
+.wvpb-modal-close {
+	background: none;
+	border: none;
+	font-size: 26px;
+	line-height: 1;
+	cursor: pointer;
+	color: #7a7264;
+	padding: 4px 8px;
+}
+
+.wvpb-modal-close:hover {
+	color: #2b2620;
+}
+
+/* ---------------------------------------------------------------
+ * Two-column body
+ * ------------------------------------------------------------- */
+
+.wvpb-modal-body {
+	display: flex;
+	flex: 1 1 auto;
+	overflow: hidden;
+}
+
+.wvpb-modal-steps {
+	flex: 1 1 55%;
+	overflow-y: auto;
+	padding: 20px 24px;
+}
+
+.wvpb-modal-preview {
+	flex: 1 1 45%;
+	background: #faf7f1;
+	border-left: 1px solid #ece5d8;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 24px;
+}
+
+.wvpb-modal-preview > img {
+	max-width: 100%;
+	max-height: 100%;
+	object-fit: contain;
+}
+
+.wvpb-compositor-canvas {
+	position: relative;
+	width: 100%;
+	max-width: 360px;
+	margin: 0 auto;
+	background: #fff;
+	border-radius: 6px;
+	overflow: hidden;
+}
+
+.wvpb-compositor-base,
+.wvpb-compositor-layer {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+}
+
+.wvpb-compositor-base {
+	z-index: 0;
+}
+
+.wvpb-modal-preview-placeholder {
+	color: #9a9384;
+	font-size: 14px;
+	text-align: center;
+}
+
+/* ---------------------------------------------------------------
+ * Steps
+ * ------------------------------------------------------------- */
+
+.wvpb-modal-step {
+	margin-bottom: 24px;
+}
+
+.wvpb-modal-step:last-child {
+	margin-bottom: 0;
+}
+
+.wvpb-modal-step-title {
+	margin: 0 0 10px;
+	font-size: 15px;
+	font-weight: 600;
+}
+
+.wvpb-modal-options {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.wvpb-modal-options.wvpb-display-swatch,
+.wvpb-modal-options.wvpb-display-button {
+	flex-direction: row;
+	flex-wrap: wrap;
+	gap: 10px;
+}
+
+.wvpb-modal-options select.wvpb-step-input {
+	width: 100%;
+	max-width: 320px;
+	padding: 8px 10px;
+	border: 1px solid #d8d0c0;
+	border-radius: 6px;
+	background: #fff;
+}
+
+/* Radio options */
+
+.wvpb-radio-option {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	cursor: pointer;
+	font-size: 14px;
+}
+
+/* Swatch options — round, sample-like chips rather than square cards,
+   since these represent flavours/colors, not generic content blocks. */
+
+.wvpb-swatch-option {
+	width: 56px;
+	height: 56px;
+	border-radius: 50%;
+	border: 2px solid #e4ded5;
+	background: #fff;
+	padding: 2px;
+	cursor: pointer;
+	overflow: hidden;
+	font-size: 10px;
+	line-height: 1.2;
+}
+
+.wvpb-swatch-option img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	border-radius: 50%;
+}
+
+.wvpb-swatch-option.is-selected {
+	border-color: #c9862e;
+	box-shadow: 0 0 0 2px rgba(201, 134, 46, 0.25);
+}
+
+/* Button-group options */
+
+.wvpb-button-option {
+	padding: 8px 16px;
+	border: 1px solid #d8d0c0;
+	border-radius: 999px;
+	background: #fff;
+	cursor: pointer;
+	font-size: 14px;
+}
+
+.wvpb-button-option.is-selected {
+	border-color: #c9862e;
+	background: #fbeedc;
+	color: #7a4d13;
+}
+
+.wvpb-option-wrap[hidden],
+.wvpb-option-wrap.wvpb-hidden {
+	display: none;
+}
+
+/* ---------------------------------------------------------------
+ * Footer
+ * ------------------------------------------------------------- */
+
+.wvpb-modal-footer {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 16px;
+	padding: 16px 24px;
+	border-top: 1px solid #ece5d8;
+}
+
+.wvpb-modal-footer button[disabled] {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+/* ---------------------------------------------------------------
+ * Responsive: stack the two columns on narrow viewports
+ * ------------------------------------------------------------- */
+
+@media screen and (max-width: 680px) {
+	.wvpb-modal-body {
+		flex-direction: column;
+		overflow-y: auto;
+	}
+
+	.wvpb-modal-preview {
+		border-left: none;
+		border-bottom: 1px solid #ece5d8;
+		min-height: 200px;
+		flex: 0 0 auto;
+	}
+
+	.wvpb-modal-steps {
+		flex: 0 0 auto;
+	}
+}
+
+/* ---------------------------------------------------------------
+ * Sticky bar
+ * ------------------------------------------------------------- */
+
+.wvpb-sticky-bar {
+	position: fixed;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: #fff;
+	border-top: 1px solid #ece5d8;
+	box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.1);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	padding: 12px 20px;
+	z-index: 99999;
+}
+
+.wvpb-sticky-bar[hidden] {
+	display: none;
+}
+
+.wvpb-sticky-bar-info {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+}
+
+.wvpb-sticky-bar-name {
+	font-weight: 600;
+	font-size: 14px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.wvpb-sticky-bar-price {
+	font-size: 13px;
+	color: #7a7264;
+}
+
+@media screen and (max-width: 480px) {
+	.wvpb-sticky-bar-name {
+		max-width: 140px;
+	}
+}
+
+/* ---------------------------------------------------------------
+ * Archive / shop loop Customize link
+ * ------------------------------------------------------------- */
+
+.wvpb-archive-customize-button {
+	display: block;
+	margin-top: 6px;
+	text-align: center;
+}

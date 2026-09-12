@@ -1,0 +1,263 @@
+/**
+ * Webcasata Visual Product Builder — admin repeater styling.
+ * Deliberately uses WordPress admin's own tokens (colors, spacing,
+ * .button/.postbox conventions) rather than a bespoke look, so the
+ * builder feels native inside wp-admin instead of like a bolted-on
+ * third-party screen.
+ */
+
+.wvpb-builder {
+	max-width: 1000px;
+}
+
+.wvpb-section-title {
+	font-size: 14px;
+	margin: 24px 0 8px;
+}
+
+/* ---------------------------------------------------------------
+ * Canvas settings
+ * ------------------------------------------------------------- */
+
+.wvpb-canvas-settings {
+	padding: 12px 16px;
+}
+
+.wvpb-media-field {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.wvpb-media-preview img {
+	width: 48px;
+	height: 48px;
+	object-fit: contain;
+	background: repeating-conic-gradient(#f0f0f1 0% 25%, #fff 0% 50%) 50% / 12px 12px;
+	border: 1px solid #dcdcde;
+	border-radius: 3px;
+}
+
+/* ---------------------------------------------------------------
+ * Steps list
+ * ------------------------------------------------------------- */
+
+.wvpb-steps-list {
+	margin-top: 4px;
+}
+
+.wvpb-step {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-left: 3px solid #2271b1;
+	border-radius: 3px;
+	margin-bottom: 10px;
+	padding: 10px 12px;
+}
+
+.wvpb-step.ui-sortable-helper {
+	box-shadow: 0 2px 8px rgba( 0, 0, 0, 0.15 );
+}
+
+.wvpb-step-header {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+	flex: 1 1 auto;
+}
+
+.wvpb-step-title {
+	flex: 1 1 220px;
+	min-width: 160px;
+	font-weight: 600;
+}
+
+.wvpb-step-body {
+	flex-basis: 100%;
+	margin-top: 12px;
+	padding-top: 12px;
+	border-top: 1px solid #f0f0f1;
+}
+
+/* ---------------------------------------------------------------
+ * Options list (nested inside a step, visually indented)
+ * ------------------------------------------------------------- */
+
+.wvpb-options-list {
+	margin-left: 24px;
+	padding-left: 14px;
+	border-left: 2px dashed #dcdcde;
+}
+
+.wvpb-option {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	background: #f6f7f7;
+	border: 1px solid #e0e0e0;
+	border-radius: 3px;
+	padding: 8px 10px;
+	margin-bottom: 8px;
+	flex-wrap: wrap;
+}
+
+.wvpb-option.ui-sortable-helper {
+	box-shadow: 0 2px 6px rgba( 0, 0, 0, 0.12 );
+}
+
+.wvpb-option-media {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	flex: 0 0 auto;
+}
+
+.wvpb-option-source {
+	flex: 0 0 auto;
+	align-self: flex-start;
+	max-width: 150px;
+}
+
+.wvpb-option-custom-fields {
+	display: flex;
+	gap: 10px;
+	flex: 0 0 auto;
+}
+
+.wvpb-option-attribute-fields {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	flex: 0 0 180px;
+}
+
+.wvpb-option-attribute-fields select {
+	max-width: 160px;
+}
+
+.wvpb-option-attribute-fields .description {
+	font-size: 11px;
+	margin: 0;
+	text-align: center;
+}
+
+.wvpb-png-preview img {
+	width: 44px;
+	height: 44px;
+	object-fit: contain;
+	background: repeating-conic-gradient(#eee 0% 25%, #fff 0% 50%) 50% / 10px 10px;
+	border: 1px solid #dcdcde;
+	border-radius: 3px;
+}
+
+.wvpb-option-fields {
+	display: flex;
+	gap: 6px;
+	flex-wrap: wrap;
+	flex: 1 1 320px;
+}
+
+.wvpb-option-fields input {
+	min-width: 0;
+}
+
+.wvpb-option-label {
+	flex: 2 1 140px;
+}
+
+.wvpb-option-value {
+	flex: 1 1 90px;
+	font-family: Consolas, Monaco, monospace;
+	font-size: 12px;
+}
+
+.wvpb-option-price,
+.wvpb-option-zindex {
+	flex: 0 1 80px;
+}
+
+.wvpb-option-recolor,
+.wvpb-option-condition {
+	flex: 1 1 100%;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 12px;
+	color: #50575e;
+	margin-top: 4px;
+}
+
+.wvpb-option-recolor label,
+.wvpb-option-condition label {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	white-space: nowrap;
+}
+
+.wvpb-condition-fields {
+	display: flex;
+	gap: 6px;
+}
+
+.wvpb-option-fill {
+	width: 36px;
+	height: 28px;
+	padding: 2px;
+}
+
+/* ---------------------------------------------------------------
+ * Drag handles / delete buttons — shared between steps & options
+ * ------------------------------------------------------------- */
+
+.wvpb-drag-handle {
+	cursor: grab;
+	color: #a7aaad;
+	font-size: 16px;
+	line-height: 1;
+	padding: 2px 4px;
+	flex: 0 0 auto;
+	user-select: none;
+}
+
+.wvpb-drag-handle:active {
+	cursor: grabbing;
+}
+
+.button-link-delete {
+	color: #b32d2e;
+	flex: 0 0 auto;
+	align-self: flex-start;
+}
+
+.button-link-delete:hover {
+	color: #dc3232;
+}
+
+.wvpb-toggle-step {
+	text-decoration: none;
+	font-size: 14px;
+	padding: 0 4px;
+}
+
+/* ---------------------------------------------------------------
+ * Responsive: stack fields on narrow admin viewports
+ * ------------------------------------------------------------- */
+
+@media screen and ( max-width: 782px ) {
+	.wvpb-option {
+		flex-direction: column;
+	}
+
+	.wvpb-options-list {
+		margin-left: 10px;
+		padding-left: 8px;
+	}
+}
