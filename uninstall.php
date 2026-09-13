@@ -51,6 +51,16 @@ foreach ( array( 'administrator', 'shop_manager' ) as $wvpb_role_name ) {
 			'delete_private_wvpb_customizers',
 			'delete_published_wvpb_customizers',
 			'delete_others_wvpb_customizers',
+			'edit_wvpb_enquiries',
+			'edit_others_wvpb_enquiries',
+			'edit_private_wvpb_enquiries',
+			'edit_published_wvpb_enquiries',
+			'publish_wvpb_enquiries',
+			'read_private_wvpb_enquiries',
+			'delete_wvpb_enquiries',
+			'delete_private_wvpb_enquiries',
+			'delete_published_wvpb_enquiries',
+			'delete_others_wvpb_enquiries',
 		) as $wvpb_cap
 	) {
 		$wvpb_role->remove_cap( $wvpb_cap );
@@ -76,6 +86,26 @@ $wvpb_customizer_ids = get_posts(
 
 foreach ( $wvpb_customizer_ids as $wvpb_customizer_id ) {
 	wp_delete_post( $wvpb_customizer_id, true );
+}
+
+/*
+ * ---------------------------------------------------------------------------
+ * 2b. Delete every Design Enquiry record and its post meta. The uploaded
+ *     reference images themselves are standalone Media Library attachments
+ *     and are left alone for the same reason layer images are — see the
+ *     note at the bottom of this file.
+ * ---------------------------------------------------------------------- */
+$wvpb_enquiry_ids = get_posts(
+	array(
+		'post_type'      => 'wvpb_enquiry',
+		'post_status'    => 'any',
+		'posts_per_page' => -1,
+		'fields'         => 'ids',
+	)
+);
+
+foreach ( $wvpb_enquiry_ids as $wvpb_enquiry_id ) {
+	wp_delete_post( $wvpb_enquiry_id, true );
 }
 
 /*
@@ -117,6 +147,11 @@ $wpdb->query(
  * ---------------------------------------------------------------------- */
 delete_option( 'wvpb_settings' );
 delete_option( 'wvpb_db_version' );
+
+// Only the pointer is removed — the confirmation page itself is a real
+// WordPress Page a shop owner may have customized further, so it's left
+// in place, same reasoning as media library attachments below.
+delete_option( 'wvpb_thankyou_page_id' );
 
 /*
  * ---------------------------------------------------------------------------

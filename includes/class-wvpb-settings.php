@@ -424,7 +424,29 @@ class WVPB_Settings {
 	 * @return void
 	 */
 	public static function render_enquiry_section_intro() {
-		echo '<p>' . esc_html__( 'When a customer submits their own design instead of using the steps above, we email these details straight to you — there is no separate list to check inside wp-admin yet.', 'webcasata-visual-product-builder' ) . '</p>';
+		echo '<p>' . esc_html__( 'When a customer submits their own design instead of using the steps above, we email these details straight to you, save a record under Design Enquiries, and redirect them to a confirmation page.', 'webcasata-visual-product-builder' ) . '</p>';
+
+		$page_id = get_option( 'wvpb_thankyou_page_id' );
+		if ( $page_id && get_post( $page_id ) ) {
+			printf(
+				'<p>%s</p>',
+				wp_kses(
+					sprintf(
+						/* translators: 1: view URL, 2: edit URL. */
+						__( 'Confirmation page: <a href="%1$s" target="_blank" rel="noopener noreferrer">View</a> &middot; <a href="%2$s">Edit</a>', 'webcasata-visual-product-builder' ),
+						esc_url( (string) get_permalink( $page_id ) ),
+						esc_url( (string) get_edit_post_link( $page_id ) )
+					),
+					array(
+						'a' => array(
+							'href'   => array(),
+							'target' => array(),
+							'rel'    => array(),
+						),
+					)
+				)
+			);
+		}
 	}
 
 	/**

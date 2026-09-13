@@ -37,23 +37,26 @@ if ( ! defined( 'ABSPATH' ) ) {
 		</div>
 
 		<div class="wvpb-modal-footer">
-			<button
-				type="button"
-				id="wvpb-modal-add-to-cart"
-				class="button alt"
-				disabled="disabled"
-				title="<?php esc_attr_e( 'Coming in a later stage', 'webcasata-visual-product-builder' ); ?>"
-			>
-				<?php esc_html_e( 'Add to Cart', 'webcasata-visual-product-builder' ); ?>
-			</button>
-			<button
-				type="button"
-				id="wvpb-modal-submit-enquiry"
-				class="button alt"
-				hidden
-			>
-				<?php esc_html_e( 'Submit Enquiry', 'webcasata-visual-product-builder' ); ?>
-			</button>
+			<div id="wvpb-modal-total" class="wvpb-modal-total"><!-- rendered by modal.js --></div>
+			<div class="wvpb-modal-footer-actions">
+				<button
+					type="button"
+					id="wvpb-modal-add-to-cart"
+					class="button alt"
+					disabled="disabled"
+					title="<?php esc_attr_e( 'Coming in a later stage', 'webcasata-visual-product-builder' ); ?>"
+				>
+					<?php esc_html_e( 'Add to Cart', 'webcasata-visual-product-builder' ); ?>
+				</button>
+				<button
+					type="button"
+					id="wvpb-modal-submit-enquiry"
+					class="button alt"
+					hidden
+				>
+					<?php esc_html_e( 'Submit Enquiry', 'webcasata-visual-product-builder' ); ?>
+				</button>
+			</div>
 		</div>
 
 	</div>

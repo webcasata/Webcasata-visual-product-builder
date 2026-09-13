@@ -57,6 +57,22 @@
 
 		$submitEnquiryBtn.on( 'click', handleFooterSubmitEnquiryClick );
 
+		// Delegated (not bound directly) because renderPriceDisplay()
+		// rebuilds this button on every price refresh.
+		$( document ).on( 'click', '#wvpb-price-breakdown-toggle', function () {
+			isBreakdownOpen = ! isBreakdownOpen;
+			$( '#wvpb-price-breakdown' ).prop( 'hidden', ! isBreakdownOpen );
+			$( this ).text( isBreakdownOpen ? '▴' : '▾' );
+		} );
+
+		$( document ).on( 'click', function ( e ) {
+			if ( isBreakdownOpen && ! $( e.target ).closest( '#wvpb-modal-total' ).length ) {
+				isBreakdownOpen = false;
+				$( '#wvpb-price-breakdown' ).prop( 'hidden', true );
+				$( '#wvpb-price-breakdown-toggle' ).text( '▾' );
+			}
+		} );
+
 		initStickyBar();
 
 		// Sent here by a shop/category loop's Customize link — open
@@ -93,6 +109,7 @@
 
 	function openModal() {
 		isMyDesignActive = false;
+		isBreakdownOpen = false;
 
 		initPreview();
 		renderSteps();
@@ -147,6 +164,129 @@
 	}
 
 	/* -----------------------------------------------------------
+	 * Pricing — an instant client-side estimate for a responsive feel,
+	 * confirmed shortly after against WVPB_Pricing's server-side
+	 * calculation. The client number is only ever a guess: it's
+	 * trivial to tamper with in the browser, so the server figure is
+	 * what actually gets displayed once it arrives, and it's the only
+	 * number Stage 8's real add-to-cart will ever trust.
+	 * --------------------------------------------------------- */
+	var priceRequestTimer = null;
+	var isBreakdownOpen = false;
+
+	function refreshPrice() {
+		var optimistic = getOptimisticPricing();
+		renderPriceDisplay( optimistic.total, optimistic.breakdown );
+
+		clearTimeout( priceRequestTimer );
+		priceRequestTimer = setTimeout( requestServerPrice, 300 );
+	}
+
+	function getOptimisticPricing() {
+		var total = Number( ( window.wvpbModalData && wvpbModalData.basePrice ) || 0 );
+		var breakdown = [ { label: wvpbModalL10n.basePriceLabel, price: total } ];
+
+		steps.forEach( function ( step, stepIndex ) {
+			var value = selections[ stepIndex ];
+			if ( undefined === value ) {
+				return;
+			}
+			var option = ( step.options || [] ).filter( function ( candidate ) {
+				return candidate.value === value;
+			} )[ 0 ];
+			if ( ! option ) {
+				return;
+			}
+
+			var price = Number( option.price || 0 );
+			total += price;
+			breakdown.push( {
+				label: ( step.title || '' ) + ': ' + ( option.label || option.value ),
+				price: price
+			} );
+		} );
+
+		return { total: Math.max( 0, total ), breakdown: breakdown };
+	}
+
+	function requestServerPrice() {
+		if ( ! window.fetch || ! window.URLSearchParams ) {
+			return;
+		}
+
+		var body = new URLSearchParams();
+		body.append( 'action', 'wvpb_calculate_price' );
+		body.append( 'nonce', wvpbModalData.pricingNonce );
+		body.append( 'product_id', wvpbModalData.productId );
+		body.append( 'customizer_id', wvpbModalData.customizerId );
+		body.append( 'selections', JSON.stringify( selections ) );
+
+		fetch( wvpbModalData.ajaxUrl, {
+			method: 'POST',
+			credentials: 'same-origin',
+			body: body
+		} )
+			.then( function ( response ) {
+				return response.json();
+			} )
+			.then( function ( json ) {
+				if ( json && json.success && json.data && undefined !== json.data.total ) {
+					var breakdown = ( json.data.breakdown || [] ).map( function ( row ) {
+						return { label: row.label, price: Number( row.price ) };
+					} );
+					renderPriceDisplay( Number( json.data.total ), breakdown );
+				}
+				// On an error response, keep whatever estimate is already
+				// showing rather than alarming the customer over what's
+				// usually a transient hiccup — the next selection change
+				// will simply try again.
+			} )
+			.catch( function () {} );
+	}
+
+	function formatBreakdownPrice( price ) {
+		if ( ! price ) {
+			return wvpbModalL10n.includedLabel;
+		}
+		return ( price > 0 ? '+' : '' ) + formatPrice( price );
+	}
+
+	function renderPriceDisplay( amount, breakdown ) {
+		var $total = $( '#wvpb-modal-total' );
+		$total.empty();
+
+		$( '<span>', { 'class': 'wvpb-modal-total-text', text: wvpbModalL10n.totalLabel + ': ' + formatPrice( amount ) } )
+			.appendTo( $total );
+
+		if ( breakdown && breakdown.length ) {
+			$( '<button>', {
+				type: 'button',
+				id: 'wvpb-price-breakdown-toggle',
+				'class': 'wvpb-price-breakdown-toggle',
+				'aria-label': wvpbModalL10n.showBreakdown,
+				text: isBreakdownOpen ? '▴' : '▾'
+			} ).appendTo( $total );
+
+			var $panel = $( '<div>', { id: 'wvpb-price-breakdown', 'class': 'wvpb-price-breakdown' } )
+				.prop( 'hidden', ! isBreakdownOpen );
+
+			breakdown.forEach( function ( row ) {
+				var $row = $( '<div>', { 'class': 'wvpb-price-breakdown-row' } );
+				$( '<span>', { text: row.label } ).appendTo( $row );
+				$( '<span>', { text: formatBreakdownPrice( row.price ) } ).appendTo( $row );
+				$panel.append( $row );
+			} );
+
+			$total.append( $panel );
+		}
+
+		// The sticky bar shows the plain base price until the customer
+		// has actually opened the customizer and made a choice — once
+		// they have, it should reflect what they've actually built.
+		$( '.wvpb-sticky-bar-price' ).text( formatPrice( amount ) );
+	}
+
+	/* -----------------------------------------------------------
 	 * Left column — steps & options
 	 * --------------------------------------------------------- */
 	function renderSteps() {
@@ -155,12 +295,11 @@
 
 		if ( ! steps.length ) {
 			$( '<p>', { text: wvpbModalL10n.noOptions } ).appendTo( $stepsContainer );
-			return;
+		} else {
+			steps.forEach( function ( step, stepIndex ) {
+				$stepsContainer.append( renderStep( step, stepIndex ) );
+			} );
 		}
-
-		steps.forEach( function ( step, stepIndex ) {
-			$stepsContainer.append( renderStep( step, stepIndex ) );
-		} );
 
 		updateConditionalVisibility();
 	}
@@ -262,13 +401,59 @@
 	function optionLabel( option ) {
 		var label = option.label || option.value;
 
-		// Rough placeholder formatting only — real currency-aware
-		// pricing and running totals are Stage 7's job.
 		if ( option.price ) {
-			label += ' (' + ( option.price > 0 ? '+' : '' ) + Number( option.price ).toFixed( 2 ) + ')';
+			label += ' (' + ( option.price > 0 ? '+' : '' ) + formatPrice( option.price ) + ')';
 		}
 
 		return label;
+	}
+
+	// Formats a number the same way wc_price() does on the server —
+	// symbol, decimal count, and separators all read from the store's
+	// actual currency settings, so this matches how prices look
+	// everywhere else in the shop rather than a hardcoded "$X.XX".
+	function formatPrice( amount ) {
+		var currency = ( window.wvpbModalData && wvpbModalData.currency ) || {};
+		var decimals = 'number' === typeof currency.decimals ? currency.decimals : 2;
+		var decimalSep = currency.decimalSep || '.';
+		var thousandSep = currency.thousandSep || ',';
+		var symbol = getCurrencySymbol();
+		var position = currency.position || 'left';
+
+		var fixed = Number( amount || 0 ).toFixed( decimals );
+		var parts = fixed.split( '.' );
+		parts[ 0 ] = parts[ 0 ].replace( /\B(?=(\d{3})+(?!\d))/g, thousandSep );
+		var formattedNumber = parts.length > 1 ? parts.join( decimalSep ) : parts[ 0 ];
+
+		switch ( position ) {
+			case 'right':
+				return formattedNumber + symbol;
+			case 'left_space':
+				return symbol + ' ' + formattedNumber;
+			case 'right_space':
+				return formattedNumber + ' ' + symbol;
+			case 'left':
+			default:
+				return symbol + formattedNumber;
+		}
+	}
+
+	// WooCommerce returns some currency symbols (₹ among them) as an
+	// HTML entity like "&#8377;", meant for direct HTML insertion.
+	// Decoding it once here — rather than switching every price
+	// display between .text()/.html() depending on the currency —
+	// means formatPrice() always returns plain, already-decoded text
+	// that's safe to use anywhere: labels, tooltips, or inserted HTML.
+	var cachedCurrencySymbol = null;
+
+	function getCurrencySymbol() {
+		if ( null === cachedCurrencySymbol ) {
+			var raw = ( ( window.wvpbModalData && wvpbModalData.currency ) || {} ).symbol || '';
+			var el = document.createElement( 'textarea' );
+			el.innerHTML = raw;
+			cachedCurrencySymbol = el.value;
+		}
+		return cachedCurrencySymbol;
 	}
 
 	/* -----------------------------------------------------------
@@ -359,6 +544,7 @@
 		} );
 
 		refreshPreview();
+		refreshPrice();
 	}
 
 	function isOptionVisible( option ) {
@@ -437,23 +623,19 @@
 		$submitEnquiryBtn.prop( 'hidden', ! isMyDesignActive );
 
 		if ( isMyDesignActive ) {
-			disableNonRequiredSteps();
+			disableAllSteps();
 		} else {
 			enableAllSteps();
 		}
 	}
 
-	// Dims and disables every step that isn't marked Required, and
-	// clears any selection it held — a skipped step's prior choice
-	// shouldn't still count once the customer says they're providing
-	// their own design instead. updateConditionalVisibility() (called
-	// at the end) re-composites the preview to match.
-	function disableNonRequiredSteps() {
+	// Dims and disables every step — including Required ones — and
+	// clears whatever it held selected. Once a customer says they're
+	// supplying their own design, nothing about the product's own
+	// configuration matters anymore: there's no cart line item or
+	// order this feeds into, only the enquiry form below.
+	function disableAllSteps() {
 		steps.forEach( function ( step, stepIndex ) {
-			if ( step.required ) {
-				return;
-			}
-
 			var $step = $stepsContainer.find( '.wvpb-modal-step[data-step-index="' + stepIndex + '"]' );
 			$step.addClass( 'wvpb-step-disabled' );
 			$step.find( 'input, select, button' ).prop( 'disabled', true );
@@ -509,13 +691,6 @@
 	 * column's content rather than opening a second modal.
 	 * --------------------------------------------------------- */
 	function handleFooterSubmitEnquiryClick() {
-		var missing = getUnmetRequiredSteps();
-
-		if ( missing.length ) {
-			showRequiredWarning();
-			return;
-		}
-
 		$stepsContainer.prop( 'hidden', true );
 		$customDesignSection.prop( 'hidden', true );
 		$addToCartBtn.prop( 'hidden', true );
@@ -545,13 +720,13 @@
 
 		var $form = $( '<form>', { id: 'wvpb-enquiry-form' } );
 
-		$form.append( buildEnquiryField( 'text', 'name', wvpbModalL10n.nameLabel, true ) );
-		$form.append( buildEnquiryField( 'email', 'email', wvpbModalL10n.emailLabel, true ) );
-		$form.append( buildEnquiryField( 'tel', 'phone', wvpbModalL10n.phoneLabel, false ) );
+		$form.append( buildEnquiryField( 'text', 'name', wvpbModalL10n.nameLabel, true, wvpbModalL10n.namePlaceholder ) );
+		$form.append( buildEnquiryField( 'email', 'email', wvpbModalL10n.emailLabel, true, wvpbModalL10n.emailPlaceholder ) );
+		$form.append( buildEnquiryField( 'tel', 'phone', wvpbModalL10n.phoneLabel, false, wvpbModalL10n.phonePlaceholder ) );
 
 		var $commentField = $( '<div>', { 'class': 'wvpb-enquiry-field' } );
 		$( '<label>', { text: wvpbModalL10n.commentLabel } ).appendTo( $commentField );
-		$( '<textarea>', { name: 'comment', rows: 4 } ).appendTo( $commentField );
+		$( '<textarea>', { name: 'comment', rows: 4, placeholder: wvpbModalL10n.commentPlaceholder } ).appendTo( $commentField );
 		$form.append( $commentField );
 
 		// Honeypot: invisible to a real visitor, so a filled value is a
@@ -570,10 +745,12 @@
 		$enquiryPanel.append( $form );
 	}
 
-	function buildEnquiryField( type, name, label, required ) {
+	function buildEnquiryField( type, name, label, required, placeholder ) {
 		var $field = $( '<div>', { 'class': 'wvpb-enquiry-field' } );
 		$( '<label>', { text: label } ).appendTo( $field );
-		$( '<input>', { type: type, name: name } ).prop( 'required', !! required ).appendTo( $field );
+		$( '<input>', { type: type, name: name, placeholder: placeholder || '' } )
+			.prop( 'required', !! required )
+			.appendTo( $field );
 		return $field;
 	}
 
@@ -612,17 +789,18 @@
 				return response.json();
 			} )
 			.then( function ( json ) {
-				if ( json && json.success ) {
-					$result
-						.text( ( json.data && json.data.message ) || wvpbModalL10n.submitEnquiry )
-						.addClass( 'is-success' )
-						.prop( 'hidden', false );
-					$form.find( 'input, textarea, button' ).prop( 'disabled', true );
-				} else {
-					var message = ( json && json.data && json.data.message ) || wvpbModalL10n.genericError;
-					$result.text( message ).addClass( 'is-error' ).prop( 'hidden', false );
-					$submitBtn.prop( 'disabled', false ).text( wvpbModalL10n.submitEnquiry );
+				if ( json && json.success && json.data && json.data.redirect_url ) {
+					// Full page navigation — the modal and its state
+					// become irrelevant the moment this fires, since the
+					// browser is leaving this page for the confirmation
+					// page, which shows everything the customer submitted.
+					window.location.href = json.data.redirect_url;
+					return;
 				}
+
+				var message = ( json && json.data && json.data.message ) || wvpbModalL10n.genericError;
+				$result.text( message ).addClass( 'is-error' ).prop( 'hidden', false );
+				$submitBtn.prop( 'disabled', false ).text( wvpbModalL10n.submitEnquiry );
 			} )
 			.catch( function () {
 				$result.text( wvpbModalL10n.genericError ).addClass( 'is-error' ).prop( 'hidden', false );

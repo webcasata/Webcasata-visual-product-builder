@@ -55,21 +55,23 @@ final class WVPB_Plugin {
 
 		WVPB_I18n::load();
 		WVPB_Post_Types::init();
+		WVPB_Enquiry_Post_Type::init();
+		WVPB_Enquiry_Admin::init();
 		WVPB_Customizer_Builder::init();
 		WVPB_Attribute_Images::init();
 		WVPB_Product_Assign::init();
 		WVPB_Frontend::init();
 		WVPB_Design_Enquiry::init();
+		WVPB_Pricing::init();
 		WVPB_Settings::init();
 		WVPB_Admin_Menu::init();
 
 		/*
-		 * Stage 7+ modules register here, one line each, following the
+		 * Stage 8+ modules register here, one line each, following the
 		 * same "class exposes a static init(), init() adds its own
 		 * hooks" pattern used above:
 		 *
 		 * WVPB_Cart::init();                // cart item data + order line item meta
-		 * WVPB_Pricing::init();             // server-side price validation
 		 */
 	}
 }

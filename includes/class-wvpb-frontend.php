@@ -321,6 +321,8 @@ class WVPB_Frontend {
 			true
 		);
 
+		$current_product = wc_get_product( get_queried_object_id() );
+
 		wp_localize_script(
 			'wvpb-frontend-modal',
 			'wvpbModalData',
@@ -329,7 +331,17 @@ class WVPB_Frontend {
 				'autoOpen'      => $auto_open,
 				'ajaxUrl'       => admin_url( 'admin-ajax.php' ),
 				'enquiryNonce'  => wp_create_nonce( 'wvpb_submit_enquiry' ),
+				'pricingNonce'  => wp_create_nonce( 'wvpb_calculate_price' ),
 				'productId'     => get_queried_object_id(),
+				'customizerId'  => $customizer_id,
+				'basePrice'     => $current_product ? (float) $current_product->get_price() : 0,
+				'currency'      => array(
+					'symbol'      => get_woocommerce_currency_symbol(),
+					'position'    => get_option( 'woocommerce_currency_pos' ),
+					'decimals'    => wc_get_price_decimals(),
+					'decimalSep'  => wc_get_price_decimal_separator(),
+					'thousandSep' => wc_get_price_thousand_separator(),
+				),
 			)
 		);
 
@@ -351,10 +363,18 @@ class WVPB_Frontend {
 				'emailLabel'         => __( 'Email', 'webcasata-visual-product-builder' ),
 				'phoneLabel'         => __( 'Phone', 'webcasata-visual-product-builder' ),
 				'commentLabel'       => __( 'Comment', 'webcasata-visual-product-builder' ),
+				'namePlaceholder'    => __( 'Your full name', 'webcasata-visual-product-builder' ),
+				'emailPlaceholder'   => __( 'you@example.com', 'webcasata-visual-product-builder' ),
+				'phonePlaceholder'   => __( 'e.g. +91 98765 43210', 'webcasata-visual-product-builder' ),
+				'commentPlaceholder' => __( 'Mention your cake base, flavour, size, or any other details you\u2019d like us to know', 'webcasata-visual-product-builder' ),
 				'submitEnquiry'      => __( 'Submit Enquiry', 'webcasata-visual-product-builder' ),
 				'sending'            => __( 'Sending…', 'webcasata-visual-product-builder' ),
 				'genericError'       => __( 'Something went wrong. Please try again.', 'webcasata-visual-product-builder' ),
 				'leaveEmpty'         => __( 'Leave this field empty', 'webcasata-visual-product-builder' ),
+				'totalLabel'         => __( 'Total', 'webcasata-visual-product-builder' ),
+				'basePriceLabel'     => __( 'Base Price', 'webcasata-visual-product-builder' ),
+				'includedLabel'      => __( 'Included', 'webcasata-visual-product-builder' ),
+				'showBreakdown'      => __( 'Show price breakdown', 'webcasata-visual-product-builder' ),
 			)
 		);
 	}
