@@ -48,6 +48,7 @@
 
 		$stepsContainer.on( 'change', '.wvpb-step-input', handleInputChange );
 		$stepsContainer.on( 'click', '.wvpb-swatch-option, .wvpb-button-option', handleClickSelect );
+		$stepsContainer.on( 'click', '.wvpb-step-clear', handleClearStep );
 
 		initStickyBar();
 
@@ -140,16 +141,6 @@
 			return;
 		}
 
-		// Default-select the first option in every step up front, so
-		// conditional rules that key off "a value is chosen" have
-		// something to evaluate the instant the modal opens, and
-		// swatch/button groups don't open with nothing highlighted.
-		steps.forEach( function ( step, stepIndex ) {
-			if ( step.options && step.options.length ) {
-				selections[ stepIndex ] = step.options[ 0 ].value;
-			}
-		} );
-
 		steps.forEach( function ( step, stepIndex ) {
 			$stepsContainer.append( renderStep( step, stepIndex ) );
 		} );
@@ -160,7 +151,14 @@
 	function renderStep( step, stepIndex ) {
 		var $step = $( '<div>', { 'class': 'wvpb-modal-step', 'data-step-index': stepIndex } );
 
-		$( '<h3>', { 'class': 'wvpb-modal-step-title', text: step.title || '' } ).appendTo( $step );
+		var $header = $( '<div>', { 'class': 'wvpb-modal-step-header' } );
+		$( '<h3>', { 'class': 'wvpb-modal-step-title', text: step.title || '' } ).appendTo( $header );
+		$( '<button>', {
+			type: 'button',
+			'class': 'wvpb-step-clear',
+			text: wvpbModalL10n.clearSelection
+		} ).appendTo( $header );
+		$step.append( $header );
 
 		var $optionsWrap = $( '<div>', {
 			'class': 'wvpb-modal-options wvpb-display-' + step.display_type
@@ -181,14 +179,14 @@
 	function renderDropdown( step ) {
 		var $select = $( '<select>', { 'class': 'wvpb-step-input' } );
 
+		$( '<option>', { value: '', text: wvpbModalL10n.chooseOption } ).appendTo( $select );
+
 		( step.options || [] ).forEach( function ( option, optionIndex ) {
 			$( '<option>', {
 				value: option.value,
 				text: optionLabel( option ),
 				'data-option-index': optionIndex
-			} )
-				.prop( 'selected', 0 === optionIndex )
-				.appendTo( $select );
+			} ).appendTo( $select );
 		} );
 
 		return $select;
@@ -204,7 +202,7 @@
 		if ( 'swatch' === step.display_type ) {
 			var $swatch = $( '<button>', {
 				type: 'button',
-				'class': 'wvpb-swatch-option' + ( 0 === optionIndex ? ' is-selected' : '' ),
+				'class': 'wvpb-swatch-option',
 				title: optionLabel( option )
 			} );
 
@@ -219,7 +217,7 @@
 			$wrap.append(
 				$( '<button>', {
 					type: 'button',
-					'class': 'wvpb-button-option' + ( 0 === optionIndex ? ' is-selected' : '' ),
+					'class': 'wvpb-button-option',
 					text: optionLabel( option )
 				} )
 			);
@@ -231,9 +229,7 @@
 				'class': 'wvpb-step-input',
 				name: 'wvpb-step-' + stepIndex,
 				value: option.value
-			} )
-				.prop( 'checked', 0 === optionIndex )
-				.appendTo( $label );
+			} ).appendTo( $label );
 			$label.append( $( '<span>' ).text( optionLabel( option ) ) );
 			$wrap.append( $label );
 		}
@@ -277,6 +273,30 @@
 		updateConditionalVisibility();
 	}
 
+	// Resets a single step back to "nothing selected" — same state the
+	// modal opens in — regardless of that step's display type.
+	function handleClearStep( e ) {
+		var $step = $( e.currentTarget ).closest( '.wvpb-modal-step' );
+		var stepIndex = $step.data( 'step-index' );
+		var step = steps[ stepIndex ];
+
+		if ( ! step ) {
+			return;
+		}
+
+		delete selections[ stepIndex ];
+
+		if ( 'dropdown' === step.display_type ) {
+			$step.find( 'select.wvpb-step-input' ).val( '' );
+		} else if ( 'swatch' === step.display_type || 'button' === step.display_type ) {
+			$step.find( '.wvpb-swatch-option, .wvpb-button-option' ).removeClass( 'is-selected' );
+		} else {
+			$step.find( 'input.wvpb-step-input' ).prop( 'checked', false );
+		}
+
+		updateConditionalVisibility();
+	}
+
 	/* -----------------------------------------------------------
 	 * Conditional visibility
 	 * --------------------------------------------------------- */
@@ -301,8 +321,15 @@
 			// If this step's current selection just got hidden by a
 			// change upstream, fall back to the first still-visible
 			// option, so a hidden choice never silently stays
-			// "selected" underneath what the customer can see.
-			if ( visibleValues.length && -1 === visibleValues.indexOf( selections[ stepIndex ] ) ) {
+			// "selected" underneath what the customer can see. This
+			// only applies when the customer had actually chosen
+			// something — it must never invent a selection for a step
+			// nothing has been picked in yet.
+			if (
+				undefined !== selections[ stepIndex ] &&
+				visibleValues.length &&
+				-1 === visibleValues.indexOf( selections[ stepIndex ] )
+			) {
 				selectOptionByValue( $step, step, stepIndex, visibleValues[ 0 ] );
 			}
 		} );

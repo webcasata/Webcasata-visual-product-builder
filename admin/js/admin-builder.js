@@ -213,8 +213,11 @@
 
 		// Conditional-visibility toggle.
 		$builder.on( 'change', '.wvpb-toggle-condition', function () {
-			var $fields = $( this ).closest( '.wvpb-option-condition' ).find( '.wvpb-condition-fields' );
-			$fields.toggle( $( this ).is( ':checked' ) );
+			var $conditionBlock = $( this ).closest( '.wvpb-option-condition' );
+			var isEnabled = $( this ).is( ':checked' );
+
+			$conditionBlock.find( '.wvpb-condition-enabled' ).val( isEnabled ? 1 : 0 );
+			$conditionBlock.find( '.wvpb-condition-fields' ).toggle( isEnabled );
 		} );
 
 		// Populate "choose step" dropdown lazily, each time it's opened,

@@ -33,6 +33,9 @@ class WVPB_Activator {
 				'button_position'          => 'before_cart',
 				'show_on_archive'          => false,
 				'show_sticky_bar'          => false,
+				'swatch_shape'             => 'circle',
+				'swatch_radius'            => 10,
+				'active_color'             => '#c9862e',
 			)
 		);
 

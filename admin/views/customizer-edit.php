@@ -200,6 +200,9 @@ wp_nonce_field( 'wvpb_save_customizer', 'wvpb_customizer_nonce' );
 				<input type="checkbox" class="wvpb-toggle-condition" <# if ( data.conditional_on ) { #>checked<# } #> />
 				<?php esc_html_e( 'Only show if…', 'webcasata-visual-product-builder' ); ?>
 			</label>
+			<input type="hidden" class="wvpb-condition-enabled"
+				name="wvpb_config[steps][{{ data.stepIndex }}][options][{{ data.optionIndex }}][conditional_on][enabled]"
+				value="{{ data.conditional_on ? 1 : 0 }}" />
 			<div class="wvpb-condition-fields" <# if ( ! data.conditional_on ) { #>style="display:none;"<# } #>>
 				<select class="wvpb-condition-step"
 					name="wvpb_config[steps][{{ data.stepIndex }}][options][{{ data.optionIndex }}][conditional_on][step]">

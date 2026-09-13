@@ -57,8 +57,55 @@ class WVPB_Frontend {
 				'button_position' => 'before_cart',
 				'show_on_archive' => false,
 				'show_sticky_bar' => false,
+				'swatch_shape'    => 'circle',
+				'swatch_radius'   => 10,
+				'active_color'    => '#c9862e',
 			)
 		);
+	}
+
+	/**
+	 * Converts the swatch-shape setting into an actual CSS radius value.
+	 *
+	 * @param array $settings Settings from get_settings().
+	 * @return string A CSS-ready value, e.g. '50%', '4px', '10px'.
+	 */
+	private static function get_swatch_border_radius( $settings ) {
+		switch ( $settings['swatch_shape'] ) {
+			case 'square':
+				return '4px'; // A slight softening rather than razor-sharp corners.
+			case 'rounded':
+				return absint( $settings['swatch_radius'] ) . 'px';
+			case 'circle':
+			default:
+				return '50%';
+		}
+	}
+
+	/**
+	 * Converts a #rrggbb hex color into an "r,g,b" triplet, for use
+	 * inside an rgba() CSS function. Falls back to the default amber
+	 * accent's triplet if the input isn't a valid 3- or 6-digit hex —
+	 * this only ever receives a value already passed through
+	 * sanitize_hex_color() in WVPB_Settings::sanitize(), so the
+	 * fallback is a safety net, not an expected path.
+	 *
+	 * @param string $hex A hex color, with or without the leading '#'.
+	 * @return string "r,g,b"
+	 */
+	private static function hex_to_rgb_triplet( $hex ) {
+
+		$hex = ltrim( (string) $hex, '#' );
+
+		if ( 3 === strlen( $hex ) ) {
+			$hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+		}
+
+		if ( 6 !== strlen( $hex ) || ! ctype_xdigit( $hex ) ) {
+			return '201,134,46';
+		}
+
+		return implode( ',', array_map( 'hexdec', str_split( $hex, 2 ) ) );
 	}
 
 	/**
@@ -247,6 +294,17 @@ class WVPB_Frontend {
 			WVPB_VERSION
 		);
 
+		$style_settings = self::get_settings();
+		wp_add_inline_style(
+			'wvpb-frontend',
+			sprintf(
+				':root{--wvpb-swatch-radius:%1$s;--wvpb-active-color:%2$s;--wvpb-active-color-rgb:%3$s;}',
+				self::get_swatch_border_radius( $style_settings ),
+				$style_settings['active_color'],
+				self::hex_to_rgb_triplet( $style_settings['active_color'] )
+			)
+		);
+
 		wp_enqueue_script(
 			'wvpb-compositor',
 			WVPB_PLUGIN_URL . 'public/js/compositor.js',
@@ -278,6 +336,8 @@ class WVPB_Frontend {
 			array(
 				'noOptions'          => __( 'This customizer has no options configured yet.', 'webcasata-visual-product-builder' ),
 				'previewPlaceholder' => __( 'Live preview coming soon', 'webcasata-visual-product-builder' ),
+				'chooseOption'       => __( '— Select —', 'webcasata-visual-product-builder' ),
+				'clearSelection'     => __( 'Clear', 'webcasata-visual-product-builder' ),
 			)
 		);
 	}

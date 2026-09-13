@@ -434,17 +434,26 @@ class WVPB_Customizer_Builder {
 	/**
 	 * Sanitizes a conditional-visibility rule.
 	 *
-	 * A rule is only kept if it names both a step index and a value —
-	 * a half-filled rule (e.g. step chosen, value never picked) is
-	 * treated as "no condition" rather than saved in a broken state
+	 * The "enabled" flag (a hidden field kept in sync with the "Only
+	 * show if…" checkbox — see admin-builder.js) is checked first and
+	 * is authoritative: unchecking that box must discard the condition
+	 * even though the step/value dropdowns underneath it still hold
+	 * their last values, by design, so a re-checked box doesn't force
+	 * the admin to re-pick them. Without this check, an unchecked box
+	 * would have no effect at all, since the dropdowns' leftover values
+	 * would still arrive in $_POST and look like a complete condition.
+	 *
+	 * A rule is otherwise only kept if it names both a step index and a
+	 * value — a half-filled rule (e.g. step chosen, value never picked)
+	 * is treated as "no condition" rather than saved in a broken state
 	 * that could hide an option from every customer.
 	 *
 	 * @param mixed $condition Raw conditional_on data.
-	 * @return array|null Sanitized condition, or null if incomplete/absent.
+	 * @return array|null Sanitized condition, or null if disabled/incomplete/absent.
 	 */
 	private static function sanitize_condition( $condition ) {
 
-		if ( empty( $condition ) || ! is_array( $condition ) ) {
+		if ( empty( $condition ) || ! is_array( $condition ) || empty( $condition['enabled'] ) ) {
 			return null;
 		}
 

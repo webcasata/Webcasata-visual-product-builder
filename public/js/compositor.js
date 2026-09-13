@@ -44,7 +44,10 @@ window.WVPBCompositor = ( function ( $ ) {
 		this.$container.empty();
 
 		this.$canvas = $( '<div>', { 'class': 'wvpb-compositor-canvas' } )
-			.css( 'aspect-ratio', ( this.config.canvas_width || 600 ) + ' / ' + ( this.config.canvas_height || 600 ) )
+			.css( {
+				'aspect-ratio': ( this.config.canvas_width || 600 ) + ' / ' + ( this.config.canvas_height || 600 ),
+				'max-width': ( this.config.canvas_width || 600 ) + 'px'
+			} )
 			.appendTo( this.$container );
 
 		this._setupBase();

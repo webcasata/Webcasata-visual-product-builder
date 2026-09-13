@@ -49,6 +49,9 @@ class WVPB_Settings {
 					'button_position'          => 'before_cart',
 					'show_on_archive'          => false,
 					'show_sticky_bar'          => false,
+					'swatch_shape'             => 'circle',
+					'swatch_radius'            => 10,
+					'active_color'             => '#c9862e',
 				),
 			)
 		);
@@ -98,6 +101,47 @@ class WVPB_Settings {
 			self::SETTINGS_PAGE,
 			'wvpb_display_section'
 		);
+
+		add_settings_section(
+			'wvpb_style_section',
+			__( 'Selection Style', 'webcasata-visual-product-builder' ),
+			array( __CLASS__, 'render_style_section_intro' ),
+			self::SETTINGS_PAGE
+		);
+
+		add_settings_field(
+			'wvpb_swatch_shape',
+			__( 'Swatch shape', 'webcasata-visual-product-builder' ),
+			array( __CLASS__, 'render_swatch_shape_field' ),
+			self::SETTINGS_PAGE,
+			'wvpb_style_section'
+		);
+
+		add_settings_field(
+			'wvpb_swatch_radius',
+			__( 'Custom corner radius', 'webcasata-visual-product-builder' ),
+			array( __CLASS__, 'render_swatch_radius_field' ),
+			self::SETTINGS_PAGE,
+			'wvpb_style_section'
+		);
+
+		add_settings_field(
+			'wvpb_active_color',
+			__( 'Active border color', 'webcasata-visual-product-builder' ),
+			array( __CLASS__, 'render_active_color_field' ),
+			self::SETTINGS_PAGE,
+			'wvpb_style_section'
+		);
+	}
+
+	/**
+	 * The swatch-shape values the settings screen (and the frontend
+	 * CSS variables in WVPB_Frontend) both recognize.
+	 *
+	 * @return string[]
+	 */
+	public static function get_allowed_swatch_shapes() {
+		return array( 'circle', 'square', 'rounded' );
 	}
 
 	/**
@@ -130,11 +174,30 @@ class WVPB_Settings {
 			$position = 'before_cart';
 		}
 
+		$shape = isset( $input['swatch_shape'] ) ? sanitize_key( $input['swatch_shape'] ) : 'circle';
+		if ( ! in_array( $shape, self::get_allowed_swatch_shapes(), true ) ) {
+			$shape = 'circle';
+		}
+
+		// Clamped to a sane range rather than trusting an arbitrary
+		// number — an unbounded radius could otherwise be used to
+		// inject an oversized value into the inline stylesheet.
+		$radius = isset( $input['swatch_radius'] ) ? absint( $input['swatch_radius'] ) : 10;
+		$radius = max( 0, min( 100, $radius ) );
+
+		$active_color = isset( $input['active_color'] ) ? sanitize_hex_color( $input['active_color'] ) : '';
+		if ( ! $active_color ) {
+			$active_color = '#c9862e';
+		}
+
 		$sanitized = array(
 			'delete_data_on_uninstall' => ! empty( $input['delete_data_on_uninstall'] ),
 			'button_position'          => $position,
 			'show_on_archive'          => ! empty( $input['show_on_archive'] ),
 			'show_sticky_bar'          => ! empty( $input['show_sticky_bar'] ),
+			'swatch_shape'             => $shape,
+			'swatch_radius'            => $radius,
+			'active_color'             => $active_color,
 		);
 
 		return wp_parse_args( $sanitized, is_array( $existing ) ? $existing : array() );
@@ -245,6 +308,91 @@ class WVPB_Settings {
 			<input type="checkbox" name="<?php echo esc_attr( WVPB_OPTION_SETTINGS ); ?>[show_sticky_bar]" value="1" <?php checked( $checked ); ?> />
 			<?php esc_html_e( 'Show a sticky bar with the product name, price, and a Customize button once the customer scrolls past it.', 'webcasata-visual-product-builder' ); ?>
 		</label>
+		<?php
+	}
+
+	/**
+	 * Prints the intro text for the Selection Style section.
+	 *
+	 * @return void
+	 */
+	public static function render_style_section_intro() {
+		echo '<p>' . esc_html__( 'Control how swatch and button-group options look when selected in the customizer popup.', 'webcasata-visual-product-builder' ) . '</p>';
+	}
+
+	/**
+	 * Renders the swatch-shape radio buttons.
+	 *
+	 * @return void
+	 */
+	public static function render_swatch_shape_field() {
+
+		$settings = get_option( WVPB_OPTION_SETTINGS, array() );
+		$current  = isset( $settings['swatch_shape'] ) ? $settings['swatch_shape'] : 'circle';
+
+		$labels = array(
+			'circle'  => __( 'Circular', 'webcasata-visual-product-builder' ),
+			'square'  => __( 'Square', 'webcasata-visual-product-builder' ),
+			'rounded' => __( 'Custom corner radius', 'webcasata-visual-product-builder' ),
+		);
+
+		foreach ( self::get_allowed_swatch_shapes() as $value ) {
+			?>
+			<label style="margin-right: 16px;">
+				<input
+					type="radio"
+					name="<?php echo esc_attr( WVPB_OPTION_SETTINGS ); ?>[swatch_shape]"
+					value="<?php echo esc_attr( $value ); ?>"
+					<?php checked( $current, $value ); ?>
+				/>
+				<?php echo esc_html( $labels[ $value ] ); ?>
+			</label>
+			<?php
+		}
+	}
+
+	/**
+	 * Renders the custom-radius number field.
+	 *
+	 * @return void
+	 */
+	public static function render_swatch_radius_field() {
+
+		$settings = get_option( WVPB_OPTION_SETTINGS, array() );
+		$current  = isset( $settings['swatch_radius'] ) ? (int) $settings['swatch_radius'] : 10;
+		?>
+		<input
+			type="number"
+			min="0"
+			max="100"
+			name="<?php echo esc_attr( WVPB_OPTION_SETTINGS ); ?>[swatch_radius]"
+			value="<?php echo esc_attr( $current ); ?>"
+			style="width: 80px;"
+		/> px
+		<p class="description">
+			<?php esc_html_e( 'Only used when the shape above is set to "Custom corner radius."', 'webcasata-visual-product-builder' ); ?>
+		</p>
+		<?php
+	}
+
+	/**
+	 * Renders the active-color picker.
+	 *
+	 * @return void
+	 */
+	public static function render_active_color_field() {
+
+		$settings = get_option( WVPB_OPTION_SETTINGS, array() );
+		$current  = ! empty( $settings['active_color'] ) ? $settings['active_color'] : '#c9862e';
+		?>
+		<input
+			type="color"
+			name="<?php echo esc_attr( WVPB_OPTION_SETTINGS ); ?>[active_color]"
+			value="<?php echo esc_attr( $current ); ?>"
+		/>
+		<p class="description">
+			<?php esc_html_e( 'Border color shown around whichever option the customer currently has selected.', 'webcasata-visual-product-builder' ); ?>
+		</p>
 		<?php
 	}
 
