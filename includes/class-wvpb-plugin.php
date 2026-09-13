@@ -59,11 +59,12 @@ final class WVPB_Plugin {
 		WVPB_Attribute_Images::init();
 		WVPB_Product_Assign::init();
 		WVPB_Frontend::init();
+		WVPB_Design_Enquiry::init();
 		WVPB_Settings::init();
 		WVPB_Admin_Menu::init();
 
 		/*
-		 * Stage 6+ modules register here, one line each, following the
+		 * Stage 7+ modules register here, one line each, following the
 		 * same "class exposes a static init(), init() adds its own
 		 * hooks" pattern used above:
 		 *

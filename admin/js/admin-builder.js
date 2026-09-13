@@ -25,6 +25,7 @@
 		title: '',
 		layer_group: 'flavour',
 		display_type: 'swatch',
+		required: false,
 		options: []
 	};
 

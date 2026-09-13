@@ -308,10 +308,11 @@ class WVPB_Customizer_Builder {
 		$raw = is_array( $raw ) ? $raw : array();
 
 		$config = array(
-			'canvas_width'  => isset( $raw['canvas_width'] ) ? absint( $raw['canvas_width'] ) : 600,
-			'canvas_height' => isset( $raw['canvas_height'] ) ? absint( $raw['canvas_height'] ) : 600,
-			'base_image_id' => isset( $raw['base_image_id'] ) ? absint( $raw['base_image_id'] ) : 0,
-			'steps'         => array(),
+			'canvas_width'        => isset( $raw['canvas_width'] ) ? absint( $raw['canvas_width'] ) : 600,
+			'canvas_height'       => isset( $raw['canvas_height'] ) ? absint( $raw['canvas_height'] ) : 600,
+			'base_image_id'       => isset( $raw['base_image_id'] ) ? absint( $raw['base_image_id'] ) : 0,
+			'allow_custom_design' => ! empty( $raw['allow_custom_design'] ),
+			'steps'               => array(),
 		);
 
 		if ( empty( $raw['steps'] ) || ! is_array( $raw['steps'] ) ) {
@@ -352,6 +353,7 @@ class WVPB_Customizer_Builder {
 			'title'        => isset( $step['title'] ) ? sanitize_text_field( $step['title'] ) : '',
 			'layer_group'  => $layer_group,
 			'display_type' => $display_type,
+			'required'     => ! empty( $step['required'] ),
 			'options'      => array(),
 		);
 

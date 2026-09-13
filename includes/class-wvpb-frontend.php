@@ -325,8 +325,11 @@ class WVPB_Frontend {
 			'wvpb-frontend-modal',
 			'wvpbModalData',
 			array(
-				'config'   => $config,
-				'autoOpen' => $auto_open,
+				'config'        => $config,
+				'autoOpen'      => $auto_open,
+				'ajaxUrl'       => admin_url( 'admin-ajax.php' ),
+				'enquiryNonce'  => wp_create_nonce( 'wvpb_submit_enquiry' ),
+				'productId'     => get_queried_object_id(),
 			)
 		);
 
@@ -338,6 +341,20 @@ class WVPB_Frontend {
 				'previewPlaceholder' => __( 'Live preview coming soon', 'webcasata-visual-product-builder' ),
 				'chooseOption'       => __( '— Select —', 'webcasata-visual-product-builder' ),
 				'clearSelection'     => __( 'Clear', 'webcasata-visual-product-builder' ),
+				'requiredBadge'      => __( 'Required', 'webcasata-visual-product-builder' ),
+				'myDesignLabel'      => __( 'My Design', 'webcasata-visual-product-builder' ),
+				'uploadYourDesign'   => __( 'Upload your design', 'webcasata-visual-product-builder' ),
+				'pleaseComplete'     => __( 'Please complete the required selections above before continuing.', 'webcasata-visual-product-builder' ),
+				'enquiryTitle'       => __( 'Tell us about your design', 'webcasata-visual-product-builder' ),
+				'back'               => __( '← Back', 'webcasata-visual-product-builder' ),
+				'nameLabel'          => __( 'Name', 'webcasata-visual-product-builder' ),
+				'emailLabel'         => __( 'Email', 'webcasata-visual-product-builder' ),
+				'phoneLabel'         => __( 'Phone', 'webcasata-visual-product-builder' ),
+				'commentLabel'       => __( 'Comment', 'webcasata-visual-product-builder' ),
+				'submitEnquiry'      => __( 'Submit Enquiry', 'webcasata-visual-product-builder' ),
+				'sending'            => __( 'Sending…', 'webcasata-visual-product-builder' ),
+				'genericError'       => __( 'Something went wrong. Please try again.', 'webcasata-visual-product-builder' ),
+				'leaveEmpty'         => __( 'Leave this field empty', 'webcasata-visual-product-builder' ),
 			)
 		);
 	}

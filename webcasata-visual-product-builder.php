@@ -53,6 +53,7 @@ require_once WVPB_PLUGIN_DIR . 'includes/class-wvpb-customizer-builder.php';
 require_once WVPB_PLUGIN_DIR . 'includes/class-wvpb-attribute-images.php';
 require_once WVPB_PLUGIN_DIR . 'includes/class-wvpb-product-assign.php';
 require_once WVPB_PLUGIN_DIR . 'includes/class-wvpb-frontend.php';
+require_once WVPB_PLUGIN_DIR . 'includes/class-wvpb-design-enquiry.php';
 require_once WVPB_PLUGIN_DIR . 'includes/class-wvpb-settings.php';
 require_once WVPB_PLUGIN_DIR . 'includes/class-wvpb-admin-menu.php';
 require_once WVPB_PLUGIN_DIR . 'includes/class-wvpb-plugin.php';

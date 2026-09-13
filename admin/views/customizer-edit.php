@@ -20,10 +20,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 $config = wp_parse_args(
 	is_array( $config ) ? $config : array(),
 	array(
-		'canvas_width'  => 600,
-		'canvas_height' => 600,
-		'base_image_id' => 0,
-		'steps'         => array(),
+		'canvas_width'        => 600,
+		'canvas_height'       => 600,
+		'base_image_id'       => 0,
+		'allow_custom_design' => false,
+		'steps'               => array(),
 	)
 );
 
@@ -59,6 +60,19 @@ wp_nonce_field( 'wvpb_save_customizer', 'wvpb_customizer_nonce' );
 					<button type="button" class="button wvpb-media-upload"><?php esc_html_e( 'Select Image', 'webcasata-visual-product-builder' ); ?></button>
 					<button type="button" class="button-link wvpb-media-remove" <?php echo $base_url ? '' : 'style="display:none;"'; ?>><?php esc_html_e( 'Remove', 'webcasata-visual-product-builder' ); ?></button>
 					<p class="description"><?php esc_html_e( 'PNG or SVG. The bottom-most layer every option is composited on top of.', 'webcasata-visual-product-builder' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="wvpb-allow-custom-design"><?php esc_html_e( 'Custom Design Option', 'webcasata-visual-product-builder' ); ?></label></th>
+				<td>
+					<label>
+						<input type="checkbox" id="wvpb-allow-custom-design" name="wvpb_config[allow_custom_design]" value="1"
+							<?php checked( ! empty( $config['allow_custom_design'] ) ); ?> />
+						<?php esc_html_e( 'Let customers upload their own design instead of using the steps above.', 'webcasata-visual-product-builder' ); ?>
+					</label>
+					<p class="description">
+						<?php esc_html_e( 'Adds a "My Design" toggle at the bottom of the popup. Turning it on hides every non-Required step and shows an image upload plus a Submit Enquiry form instead.', 'webcasata-visual-product-builder' ); ?>
+					</p>
 				</td>
 			</tr>
 		</table>
@@ -105,6 +119,13 @@ wp_nonce_field( 'wvpb_save_customizer', 'wvpb_customizer_nonce' );
 				<option value="dropdown" <# if ( data.display_type === 'dropdown' ) { #>selected<# } #>><?php esc_html_e( 'Show as: Dropdown', 'webcasata-visual-product-builder' ); ?></option>
 				<option value="button" <# if ( data.display_type === 'button' ) { #>selected<# } #>><?php esc_html_e( 'Show as: Button group', 'webcasata-visual-product-builder' ); ?></option>
 			</select>
+
+			<label class="wvpb-step-required">
+				<input type="checkbox" class="wvpb-step-required-checkbox"
+					name="wvpb_config[steps][{{ data.stepIndex }}][required]" value="1"
+					<# if ( data.required ) { #>checked<# } #> />
+				<?php esc_html_e( 'Required', 'webcasata-visual-product-builder' ); ?>
+			</label>
 
 			<button type="button" class="button-link wvpb-toggle-step" aria-label="<?php esc_attr_e( 'Collapse step', 'webcasata-visual-product-builder' ); ?>">▾</button>
 			<button type="button" class="button-link-delete wvpb-delete-step" aria-label="<?php esc_attr_e( 'Delete step', 'webcasata-visual-product-builder' ); ?>">✕</button>

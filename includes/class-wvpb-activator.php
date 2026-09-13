@@ -36,6 +36,7 @@ class WVPB_Activator {
 				'swatch_shape'             => 'circle',
 				'swatch_radius'            => 10,
 				'active_color'             => '#c9862e',
+				'notification_email'       => get_option( 'admin_email' ),
 			)
 		);
 

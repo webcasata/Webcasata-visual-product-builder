@@ -52,6 +52,7 @@ class WVPB_Settings {
 					'swatch_shape'             => 'circle',
 					'swatch_radius'            => 10,
 					'active_color'             => '#c9862e',
+					'notification_email'       => get_option( 'admin_email' ),
 				),
 			)
 		);
@@ -132,6 +133,21 @@ class WVPB_Settings {
 			self::SETTINGS_PAGE,
 			'wvpb_style_section'
 		);
+
+		add_settings_section(
+			'wvpb_enquiry_section',
+			__( 'Design Enquiries', 'webcasata-visual-product-builder' ),
+			array( __CLASS__, 'render_enquiry_section_intro' ),
+			self::SETTINGS_PAGE
+		);
+
+		add_settings_field(
+			'wvpb_notification_email',
+			__( 'Notification email', 'webcasata-visual-product-builder' ),
+			array( __CLASS__, 'render_notification_email_field' ),
+			self::SETTINGS_PAGE,
+			'wvpb_enquiry_section'
+		);
 	}
 
 	/**
@@ -190,6 +206,11 @@ class WVPB_Settings {
 			$active_color = '#c9862e';
 		}
 
+		$notification_email = isset( $input['notification_email'] ) ? sanitize_email( $input['notification_email'] ) : '';
+		if ( ! $notification_email || ! is_email( $notification_email ) ) {
+			$notification_email = get_option( 'admin_email' );
+		}
+
 		$sanitized = array(
 			'delete_data_on_uninstall' => ! empty( $input['delete_data_on_uninstall'] ),
 			'button_position'          => $position,
@@ -198,6 +219,7 @@ class WVPB_Settings {
 			'swatch_shape'             => $shape,
 			'swatch_radius'            => $radius,
 			'active_color'             => $active_color,
+			'notification_email'       => $notification_email,
 		);
 
 		return wp_parse_args( $sanitized, is_array( $existing ) ? $existing : array() );
@@ -392,6 +414,37 @@ class WVPB_Settings {
 		/>
 		<p class="description">
 			<?php esc_html_e( 'Border color shown around whichever option the customer currently has selected.', 'webcasata-visual-product-builder' ); ?>
+		</p>
+		<?php
+	}
+
+	/**
+	 * Prints the intro text for the Design Enquiries section.
+	 *
+	 * @return void
+	 */
+	public static function render_enquiry_section_intro() {
+		echo '<p>' . esc_html__( 'When a customer submits their own design instead of using the steps above, we email these details straight to you — there is no separate list to check inside wp-admin yet.', 'webcasata-visual-product-builder' ) . '</p>';
+	}
+
+	/**
+	 * Renders the notification email field.
+	 *
+	 * @return void
+	 */
+	public static function render_notification_email_field() {
+
+		$settings = get_option( WVPB_OPTION_SETTINGS, array() );
+		$current  = ! empty( $settings['notification_email'] ) ? $settings['notification_email'] : get_option( 'admin_email' );
+		?>
+		<input
+			type="email"
+			name="<?php echo esc_attr( WVPB_OPTION_SETTINGS ); ?>[notification_email]"
+			value="<?php echo esc_attr( $current ); ?>"
+			class="regular-text"
+		/>
+		<p class="description">
+			<?php esc_html_e( 'Where "My Design" enquiries are sent. Defaults to your site\'s admin email.', 'webcasata-visual-product-builder' ); ?>
 		</p>
 		<?php
 	}

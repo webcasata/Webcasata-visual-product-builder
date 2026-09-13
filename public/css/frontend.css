@@ -92,7 +92,7 @@ body.wvpb-modal-open {
 	overflow: hidden;
 }
 
-.wvpb-modal-steps {
+.wvpb-modal-left {
 	flex: 1 1 55%;
 	overflow-y: auto;
 	padding: 20px 24px;
@@ -159,6 +159,12 @@ body.wvpb-modal-open {
 	justify-content: space-between;
 	gap: 12px;
 	margin-bottom: 10px;
+}
+
+.wvpb-modal-step-title-group {
+	display: flex;
+	align-items: baseline;
+	gap: 8px;
 }
 
 .wvpb-modal-step-title {
@@ -301,7 +307,7 @@ body.wvpb-modal-open {
 		flex: 0 0 auto;
 	}
 
-	.wvpb-modal-steps {
+	.wvpb-modal-left {
 		flex: 0 0 auto;
 	}
 }
@@ -364,4 +370,166 @@ body.wvpb-modal-open {
 	display: block;
 	margin-top: 6px;
 	text-align: center;
+}
+
+/* ---------------------------------------------------------------
+ * Required step badge
+ * ------------------------------------------------------------- */
+
+.wvpb-required-badge {
+	font-size: 11px;
+	font-weight: 600;
+	color: #b32d2e;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+}
+
+/* ---------------------------------------------------------------
+ * Disabled steps — shown when "My Design" is active and a step
+ * isn't marked Required.
+ * ------------------------------------------------------------- */
+
+.wvpb-modal-step.wvpb-step-disabled {
+	opacity: 0.45;
+	pointer-events: none;
+}
+
+/* ---------------------------------------------------------------
+ * "My Design" toggle + upload field
+ * ------------------------------------------------------------- */
+
+.wvpb-custom-design-section {
+	margin-top: 28px;
+	padding-top: 20px;
+	border-top: 1px solid #ece5d8;
+}
+
+.wvpb-toggle-switch {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	cursor: pointer;
+	font-weight: 600;
+	font-size: 14px;
+}
+
+.wvpb-toggle-switch input {
+	position: absolute;
+	opacity: 0;
+	width: 0;
+	height: 0;
+}
+
+.wvpb-toggle-slider {
+	position: relative;
+	width: 40px;
+	height: 22px;
+	background: #d8d0c0;
+	border-radius: 999px;
+	transition: background 0.15s ease;
+	flex: 0 0 auto;
+}
+
+.wvpb-toggle-slider::before {
+	content: '';
+	position: absolute;
+	top: 2px;
+	left: 2px;
+	width: 18px;
+	height: 18px;
+	background: #fff;
+	border-radius: 50%;
+	transition: transform 0.15s ease;
+}
+
+.wvpb-toggle-switch input:checked + .wvpb-toggle-slider {
+	background: var(--wvpb-active-color, #c9862e);
+}
+
+.wvpb-toggle-switch input:checked + .wvpb-toggle-slider::before {
+	transform: translateX(18px);
+}
+
+.wvpb-custom-design-upload {
+	margin-top: 14px;
+}
+
+.wvpb-custom-design-upload label {
+	display: block;
+	font-size: 13px;
+	font-weight: 600;
+	margin-bottom: 6px;
+}
+
+/* ---------------------------------------------------------------
+ * Enquiry form panel
+ * ------------------------------------------------------------- */
+
+.wvpb-enquiry-back {
+	background: none;
+	border: none;
+	padding: 0;
+	margin-bottom: 16px;
+	font-size: 13px;
+	color: #7a7264;
+	cursor: pointer;
+	text-decoration: underline;
+}
+
+.wvpb-enquiry-form-panel h3 {
+	margin: 0 0 14px;
+	font-size: 16px;
+}
+
+.wvpb-enquiry-field {
+	margin-bottom: 14px;
+}
+
+.wvpb-enquiry-field label {
+	display: block;
+	font-size: 13px;
+	font-weight: 600;
+	margin-bottom: 4px;
+}
+
+.wvpb-enquiry-field input,
+.wvpb-enquiry-field textarea {
+	width: 100%;
+	max-width: 360px;
+	padding: 8px 10px;
+	border: 1px solid #d8d0c0;
+	border-radius: 6px;
+	font: inherit;
+}
+
+.wvpb-enquiry-honeypot {
+	position: absolute;
+	left: -9999px;
+	top: -9999px;
+}
+
+.wvpb-enquiry-result {
+	margin-top: 14px;
+	padding: 10px 14px;
+	border-radius: 6px;
+	font-size: 13px;
+}
+
+.wvpb-enquiry-result.is-success {
+	background: #eaf5ea;
+	color: #2e6b2e;
+}
+
+.wvpb-enquiry-result.is-error {
+	background: #fbe9e9;
+	color: #a33;
+}
+
+.wvpb-required-warning {
+	background: #fbe9e9;
+	color: #a33;
+	padding: 10px 14px;
+	border-radius: 6px;
+	font-size: 13px;
+	margin-bottom: 16px;
 }
